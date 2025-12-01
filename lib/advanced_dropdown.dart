@@ -51,6 +51,8 @@ class AdvancedDropdown extends StatefulWidget {
   /// Optional decoration for the search field
   final InputDecoration? inputDecoration;
 
+  final EdgeInsets padding;
+
   /// Optional dropdown icon (default: arrow)
   final Icon? icon;
 
@@ -100,6 +102,7 @@ class AdvancedDropdown extends StatefulWidget {
     this.isSearch = false,
     this.isMultiSelect = false,
     this.inputDecoration,
+    this.padding = const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
     this.decoration,
     this.dropdownDecoration,
     this.icon,
@@ -137,18 +140,12 @@ class _AdvancedDropdownState extends State<AdvancedDropdown> {
     if (widget.isMultiSelect && widget.initialValues != null) {
       _selectedLabels.addAll(
         widget.initialValues!.map((v) {
-          final item = widget.items.firstWhere(
-            (it) => _getValue(it) == v,
-            orElse: () => null,
-          );
+          final item = widget.items.firstWhere((it) => _getValue(it) == v, orElse: () => null);
           return item != null ? _getLabel(item) : v.toString();
         }),
       );
     } else if (!widget.isMultiSelect && widget.initialValue != null) {
-      final item = widget.items.firstWhere(
-        (it) => _getValue(it) == widget.initialValue,
-        orElse: () => null,
-      );
+      final item = widget.items.firstWhere((it) => _getValue(it) == widget.initialValue, orElse: () => null);
       _selectedLabel = item != null ? _getLabel(item) : widget.initialValue.toString();
     }
   }
@@ -176,7 +173,7 @@ class _AdvancedDropdownState extends State<AdvancedDropdown> {
   OverlayEntry _createOverlayEntry() {
     RenderBox renderBox = context.findRenderObject() as RenderBox;
     Size size = renderBox.size;
-  
+
     return OverlayEntry(
       builder: (context) {
         return GestureDetector(
@@ -199,7 +196,8 @@ class _AdvancedDropdownState extends State<AdvancedDropdown> {
                   borderRadius: BorderRadius.circular(8),
                   child: Container(
                     width: size.width,
-                    decoration: widget.dropdownDecoration ??
+                    decoration:
+                        widget.dropdownDecoration ??
                         BoxDecoration(
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(8),
@@ -209,11 +207,9 @@ class _AdvancedDropdownState extends State<AdvancedDropdown> {
                     child: StatefulBuilder(
                       builder: (context, setInnerState) {
                         final filteredItems = widget.items
-                            .where((item) => _getLabel(item)
-                                .toLowerCase()
-                                .contains(_searchText.toLowerCase()))
+                            .where((item) => _getLabel(item).toLowerCase().contains(_searchText.toLowerCase()))
                             .toList();
-  
+
                         return Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
@@ -222,7 +218,8 @@ class _AdvancedDropdownState extends State<AdvancedDropdown> {
                                 padding: const EdgeInsets.all(8.0),
                                 child: TextField(
                                   style: const TextStyle(color: Colors.black),
-                                  decoration: widget.inputDecoration ??
+                                  decoration:
+                                      widget.inputDecoration ??
                                       const InputDecoration(
                                         hintText: 'Search...',
                                         border: OutlineInputBorder(),
@@ -240,16 +237,11 @@ class _AdvancedDropdownState extends State<AdvancedDropdown> {
                                 children: filteredItems.map((item) {
                                   final label = _getLabel(item);
                                   final value = _getValue(item);
-                                  final isSelected = widget.isMultiSelect &&
-                                      _selectedLabels.contains(label);
+                                  final isSelected = widget.isMultiSelect && _selectedLabels.contains(label);
                                   return ListTile(
                                     title: Text(label, style: widget.itemTextStyle),
                                     trailing: widget.isMultiSelect
-                                        ? Checkbox(
-                                            value: isSelected,
-                                            onChanged: (_) =>
-                                                _onItemSelect(value, label),
-                                          )
+                                        ? Checkbox(value: isSelected, onChanged: (_) => _onItemSelect(value, label))
                                         : null,
                                     onTap: () {
                                       if (!widget.isMultiSelect) {
@@ -263,10 +255,7 @@ class _AdvancedDropdownState extends State<AdvancedDropdown> {
                             if (widget.isMultiSelect)
                               Padding(
                                 padding: const EdgeInsets.all(8.0),
-                                child: ElevatedButton(
-                                  onPressed: _closeDropdown,
-                                  child: const Text("OK"),
-                                ),
+                                child: ElevatedButton(onPressed: _closeDropdown, child: const Text("OK")),
                               ),
                           ],
                         );
@@ -288,12 +277,10 @@ class _AdvancedDropdownState extends State<AdvancedDropdown> {
         if (_selectedLabels.contains(label)) {
           _selectedLabels.remove(label);
         } else {
-          if (widget.maxSelection != null &&
-              _selectedLabels.length >= widget.maxSelection!) {
+          if (widget.maxSelection != null && _selectedLabels.length >= widget.maxSelection!) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content:
-                    Text('You can select up to ${widget.maxSelection} items'),
+                content: Text('You can select up to ${widget.maxSelection} items'),
                 duration: const Duration(seconds: 2),
               ),
             );
@@ -301,10 +288,9 @@ class _AdvancedDropdownState extends State<AdvancedDropdown> {
           }
           _selectedLabels.add(label);
         }
-        widget.onChanged(_selectedLabels
-            .map((lbl) => _getValue(widget.items
-                .firstWhere((it) => _getLabel(it) == lbl)))
-            .toList());
+        widget.onChanged(
+          _selectedLabels.map((lbl) => _getValue(widget.items.firstWhere((it) => _getLabel(it) == lbl))).toList(),
+        );
         _rebuildDropdown();
       } else {
         _selectedLabel = label;
@@ -332,20 +318,15 @@ class _AdvancedDropdownState extends State<AdvancedDropdown> {
       runSpacing: -6,
       children: _selectedLabels.map((item) {
         return Chip(
-          label: Text(
-            item,
-            style: widget.chipTextStyle ??
-                TextStyle(color: widget.chipTextColor, fontSize: 14),
-          ),
+          label: Text(item, style: widget.chipTextStyle ?? TextStyle(color: widget.chipTextColor, fontSize: 14)),
           backgroundColor: widget.chipColor,
           deleteIcon: Icon(Icons.close, color: widget.chipRemoveIconColor),
           onDeleted: () {
             setState(() {
               _selectedLabels.remove(item);
-              widget.onChanged(_selectedLabels
-                  .map((lbl) => _getValue(widget.items
-                      .firstWhere((it) => _getLabel(it) == lbl)))
-                  .toList());
+              widget.onChanged(
+                _selectedLabels.map((lbl) => _getValue(widget.items.firstWhere((it) => _getLabel(it) == lbl))).toList(),
+              );
             });
           },
         );
@@ -360,8 +341,9 @@ class _AdvancedDropdownState extends State<AdvancedDropdown> {
       child: GestureDetector(
         onTap: _toggleDropdown,
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          decoration: widget.decoration ??
+          padding: widget.padding,
+          decoration:
+              widget.decoration ??
               BoxDecoration(
                 border: Border.all(color: Colors.grey.shade400),
                 borderRadius: BorderRadius.circular(8),
@@ -373,17 +355,15 @@ class _AdvancedDropdownState extends State<AdvancedDropdown> {
               Expanded(
                 child: widget.isMultiSelect
                     ? (_selectedLabels.isEmpty
-                        ? Text(
-                            widget.hintText ?? 'Select items',
-                            style: widget.hintStyle ??
-                                const TextStyle(color: Colors.grey),
-                          )
-                        : _buildChips())
+                          ? Text(
+                              widget.hintText ?? 'Select items',
+                              style: widget.hintStyle ?? const TextStyle(color: Colors.grey),
+                            )
+                          : _buildChips())
                     : Text(
                         _selectedLabel ?? (widget.hintText ?? 'Select item'),
                         style: _selectedLabel == null
-                            ? (widget.hintStyle ??
-                                const TextStyle(color: Colors.grey))
+                            ? (widget.hintStyle ?? const TextStyle(color: Colors.grey))
                             : widget.selectedTextStyle,
                       ),
               ),
