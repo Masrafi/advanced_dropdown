@@ -90,3 +90,9 @@
 
 - Search field text not showing issue
 - Add example code
+
+---
+
+## 2.0.6
+
+- Custom padding

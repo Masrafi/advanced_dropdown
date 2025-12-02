@@ -49,6 +49,7 @@ class _AdvancedDropdownDemoState extends State<AdvancedDropdownDemo> {
               ),
               itemTextStyle: const TextStyle(fontSize: 16),
               icon: Icon(Icons.add),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
             ),
             const SizedBox(height: 8),
             Text("Selected: ${_selectedFruit ?? "None"}"), 
