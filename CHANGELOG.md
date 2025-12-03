@@ -96,3 +96,11 @@
 ## 2.0.6
 
 - Custom padding
+
+---
+
+## 2.0.7
+
+- Popup overlay issue
+- Dynamic padding
+- Dynamic background color
