@@ -1,34 +1,4 @@
 import 'package:flutter/material.dart';
-
-/// 🧩 AdvancedDropdown
-/// A flexible, fully customizable dropdown for Flutter.
-///
-/// ✅ Features:
-/// - Single select & multi-select
-/// - Searchable dropdown
-/// - Preselected values from backend
-/// - Works with List<String> or List<Map<String, dynamic>>
-/// - Customizable decoration, colors, and icons
-/// - Max selection limit
-/// - Chips with remove option for multi-select
-///
-/// Example:
-/// ```dart
-/// AdvancedDropdown(
-///   items: [
-///     {'id': 1, 'name': 'Flutter'},
-///     {'id': 2, 'name': 'React'},
-///     {'id': 3, 'name': 'Vue'},
-///   ],
-///   displayField: 'name',
-///   valueField: 'id',
-///   isMultiSelect: true,
-///   initialValues: [1, 3],
-///   maxSelection: 3,
-///   chipColor: Colors.blue.shade100,
-///   onChanged: (val) => print(val),
-/// )
-/// ```
 class AdvancedDropdown extends StatefulWidget {
   final List<dynamic> items;
   final Function(dynamic) onChanged;
@@ -159,66 +129,43 @@ class _AdvancedDropdownState extends State<AdvancedDropdown> {
     Overlay.of(context).insert(_overlayEntry!);
   }
 
-  OverlayEntry _createOverlayEntry() {
-    RenderBox box = context.findRenderObject() as RenderBox;
-    Size fieldSize = box.size;
+OverlayEntry _createOverlayEntry() {
+  final screenSize = MediaQuery.of(context).size;
 
-    final overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
-    final fieldPosition = box.localToGlobal(Offset.zero);
-
-    double spaceBelow = overlay.size.height - (fieldPosition.dy + fieldSize.height);
-    double spaceAbove = fieldPosition.dy;
-
-    bool openUpward = spaceBelow < 300; // auto open up if small space
-
-    return OverlayEntry(
-      builder: (context) {
-        return GestureDetector(
-          behavior: HitTestBehavior.translucent,
-          onTap: _closeDropdown,
-          child: Stack(
-            children: [
-              Positioned.fill(
-                child: GestureDetector(
-                  onTap: _closeDropdown,
-                  child: Container(color: Colors.transparent),
-                ),
-              ),
-
-              // POPUP
-              Positioned(
-                width: fieldSize.width,
-                child: CompositedTransformFollower(
-                  link: _layerLink,
-                  showWhenUnlinked: false,
-                  offset: openUpward
-                      ? Offset(0, -(300.0 + 10.0))  // upward
-                      : Offset(0, fieldSize.height + 5), // downward
-                  child: Material(
-                    elevation: 4,
-                    borderRadius: BorderRadius.circular(8),
-                    child: Container(
-                      decoration: widget.dropdownDecoration ??
-                          BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: Colors.grey.shade300),
-                          ),
-                      constraints: BoxConstraints(
-                        maxHeight: openUpward ? spaceAbove - 20 : 400,
-                      ),
-                      child: _buildPopupContent(),
-                    ),
+  return OverlayEntry(
+    builder: (context) {
+      return GestureDetector(
+        behavior: HitTestBehavior.translucent,
+        onTap: _closeDropdown,
+        child: Material(
+          color: Colors.black.withOpacity(0.15), // optional dim background
+          child: Center(
+            child: GestureDetector(
+              onTap: () {}, // prevent closing when tapping popup
+              child: Material(
+                elevation: 8,
+                borderRadius: BorderRadius.circular(12),
+                child: Container(
+                  width: screenSize.width * 0.9,
+                  constraints: const BoxConstraints(
+                    maxHeight: 450,
                   ),
+                  decoration: widget.dropdownDecoration ??
+                      BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.grey.shade300),
+                      ),
+                  child: _buildPopupContent(),
                 ),
               ),
-            ],
+            ),
           ),
-        );
-      },
-    );
-  }
-
+        ),
+      );
+    },
+  );
+}
   // ================= POPUP CONTENT =================
 
   Widget _buildPopupContent() {

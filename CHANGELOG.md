@@ -104,3 +104,9 @@
 - Popup overlay issue
 - Dynamic padding
 - Dynamic background color
+
+---
+
+## 2.1.1
+
+- Dropdown popup position center
