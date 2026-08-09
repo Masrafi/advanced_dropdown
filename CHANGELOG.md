@@ -110,3 +110,9 @@
 ## 2.1.1
 
 - Dropdown popup position center
+
+---
+
+## 2.1.2
+
+- Fixed overlay issue

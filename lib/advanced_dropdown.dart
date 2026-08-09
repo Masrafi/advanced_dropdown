@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 class AdvancedDropdown extends StatefulWidget {
   final List<dynamic> items;
   final Function(dynamic) onChanged;
@@ -78,6 +79,10 @@ class _AdvancedDropdownState extends State<AdvancedDropdown> {
   List<String> _selectedLabels = [];
   String _searchText = '';
 
+  // Whether the popup overlay is currently showing.
+  // Used by PopScope to intercept the Android back button.
+  bool get _isDropdownOpen => _overlayEntry != null;
+
   @override
   void initState() {
     super.initState();
@@ -86,25 +91,34 @@ class _AdvancedDropdownState extends State<AdvancedDropdown> {
     if (widget.isMultiSelect && widget.initialValues != null) {
       _selectedLabels = widget.initialValues!
           .map((v) {
-            final item = widget.items.firstWhere(
+        final item = widget.items.firstWhere(
               (it) => _getValue(it) == v,
-              orElse: () => null,
-            );
-            return item != null ? _getLabel(item) : v.toString();
-          })
+          orElse: () => null,
+        );
+        return item != null ? _getLabel(item) : v.toString();
+      })
           .toList();
     }
 
     // Pre-selected single-select item
     if (!widget.isMultiSelect && widget.initialValue != null) {
       final item = widget.items.firstWhere(
-        (it) => _getValue(it) == widget.initialValue,
+            (it) => _getValue(it) == widget.initialValue,
         orElse: () => null,
       );
       _selectedLabel = item != null
           ? _getLabel(item)
           : widget.initialValue.toString();
     }
+  }
+
+  @override
+  void dispose() {
+    // Safety net: make sure the overlay never leaks if the widget
+    // is removed from the tree while the popup is still open.
+    _overlayEntry?.remove();
+    _overlayEntry = null;
+    super.dispose();
   }
 
   // ================= OVERLAY =================
@@ -129,51 +143,53 @@ class _AdvancedDropdownState extends State<AdvancedDropdown> {
     Overlay.of(context).insert(_overlayEntry!);
   }
 
-OverlayEntry _createOverlayEntry() {
-  final screenSize = MediaQuery.of(context).size;
+  OverlayEntry _createOverlayEntry() {
+    final screenSize = MediaQuery.of(context).size;
 
-  return OverlayEntry(
-    builder: (context) {
-      return GestureDetector(
-        behavior: HitTestBehavior.translucent,
-        onTap: _closeDropdown,
-        child: Material(
-          color: Colors.black.withOpacity(0.15), // optional dim background
-          child: Center(
-            child: GestureDetector(
-              onTap: () {}, // prevent closing when tapping popup
-              child: Material(
-                elevation: 8,
-                borderRadius: BorderRadius.circular(12),
-                child: Container(
-                  width: screenSize.width * 0.9,
-                  constraints: const BoxConstraints(
-                    maxHeight: 450,
+    return OverlayEntry(
+      builder: (context) {
+        return GestureDetector(
+          behavior: HitTestBehavior.translucent,
+          onTap: _closeDropdown,
+          child: Material(
+            color: Colors.black.withOpacity(0.15), // optional dim background
+            child: Center(
+              child: GestureDetector(
+                onTap: () {}, // prevent closing when tapping popup
+                child: Material(
+                  elevation: 8,
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    width: screenSize.width * 0.9,
+                    constraints: const BoxConstraints(
+                      maxHeight: 450,
+                    ),
+                    decoration: widget.dropdownDecoration ??
+                        BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.grey.shade300),
+                        ),
+                    child: _buildPopupContent(),
                   ),
-                  decoration: widget.dropdownDecoration ??
-                      BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.grey.shade300),
-                      ),
-                  child: _buildPopupContent(),
                 ),
               ),
             ),
           ),
-        ),
-      );
-    },
-  );
-}
+        );
+      },
+    );
+  }
+
   // ================= POPUP CONTENT =================
 
   Widget _buildPopupContent() {
     return StatefulBuilder(
       builder: (context, setInner) {
         final filtered = widget.items
-            .where((item) =>
-                _getLabel(item).toLowerCase().contains(_searchText.toLowerCase()))
+            .where((item) => _getLabel(item)
+            .toLowerCase()
+            .contains(_searchText.toLowerCase()))
             .toList();
 
         return Column(
@@ -194,7 +210,6 @@ OverlayEntry _createOverlayEntry() {
                   },
                 ),
               ),
-
             Expanded(
               child: ListView(
                 padding: EdgeInsets.zero,
@@ -203,16 +218,16 @@ OverlayEntry _createOverlayEntry() {
                   final label = _getLabel(item);
                   final value = _getValue(item);
 
-                  final isSelected = widget.isMultiSelect &&
-                      _selectedLabels.contains(label);
+                  final isSelected =
+                      widget.isMultiSelect && _selectedLabels.contains(label);
 
                   return ListTile(
                     title: Text(label, style: widget.itemTextStyle),
                     trailing: widget.isMultiSelect
                         ? Checkbox(
-                            value: isSelected,
-                            onChanged: (_) => _onItemSelect(value, label),
-                          )
+                      value: isSelected,
+                      onChanged: (_) => _onItemSelect(value, label),
+                    )
                         : null,
                     onTap: () {
                       if (!widget.isMultiSelect) {
@@ -223,7 +238,6 @@ OverlayEntry _createOverlayEntry() {
                 }).toList(),
               ),
             ),
-
             if (widget.isMultiSelect)
               Padding(
                 padding: const EdgeInsets.all(8),
@@ -250,8 +264,8 @@ OverlayEntry _createOverlayEntry() {
               _selectedLabels.length >= widget.maxSelection!) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text(
-                    "You can select up to ${widget.maxSelection} items"),
+                content:
+                Text("You can select up to ${widget.maxSelection} items"),
               ),
             );
             return;
@@ -262,7 +276,7 @@ OverlayEntry _createOverlayEntry() {
         widget.onChanged(
           _selectedLabels
               .map((lbl) => _getValue(
-                  widget.items.firstWhere((it) => _getLabel(it) == lbl)))
+              widget.items.firstWhere((it) => _getLabel(it) == lbl)))
               .toList(),
         );
 
@@ -279,7 +293,9 @@ OverlayEntry _createOverlayEntry() {
 
   String _getLabel(dynamic item) {
     if (widget.labelBuilder != null) return widget.labelBuilder!(item);
-    if (item is Map && item.containsKey("label")) return item["label"].toString();
+    if (item is Map && item.containsKey("label")) {
+      return item["label"].toString();
+    }
     return item.toString();
   }
 
@@ -309,8 +325,8 @@ OverlayEntry _createOverlayEntry() {
               _selectedLabels.remove(label);
               widget.onChanged(
                 _selectedLabels
-                    .map((lbl) => _getValue(widget.items
-                        .firstWhere((it) => _getLabel(it) == lbl)))
+                    .map((lbl) => _getValue(
+                    widget.items.firstWhere((it) => _getLabel(it) == lbl)))
                     .toList(),
               );
             });
@@ -324,41 +340,53 @@ OverlayEntry _createOverlayEntry() {
 
   @override
   Widget build(BuildContext context) {
-    return CompositedTransformTarget(
-      link: _layerLink,
-      child: GestureDetector(
-        onTap: _toggleDropdown,
-        child: Container(
-          padding: widget.padding,
-          decoration: widget.decoration ??
-              BoxDecoration(
-                border: Border.all(color: Colors.grey.shade400),
-                borderRadius: BorderRadius.circular(8),
-                color: Colors.white,
-              ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: widget.isMultiSelect
-                    ? (_selectedLabels.isEmpty
-                        ? Text(
-                            widget.hintText ?? "Select items",
-                            style: widget.hintStyle ??
-                                const TextStyle(color: Colors.grey),
-                          )
-                        : _buildChips())
-                    : Text(
-                        _selectedLabel ?? (widget.hintText ?? "Select item"),
-                        style: _selectedLabel == null
-                            ? widget.hintStyle ??
-                                const TextStyle(color: Colors.grey)
-                            : widget.selectedTextStyle,
-                      ),
-              ),
-              const SizedBox(width: 8),
-              widget.icon ?? const Icon(Icons.arrow_drop_down),
-            ],
+    // PopScope intercepts the Android back button (and iOS swipe-back).
+    // While the popup overlay is open, we block the normal pop and
+    // close the overlay instead - mirroring the outside-tap-to-close
+    // behavior that already works.
+    return PopScope(
+      canPop: !_isDropdownOpen,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop && _isDropdownOpen) {
+          _closeDropdown();
+        }
+      },
+      child: CompositedTransformTarget(
+        link: _layerLink,
+        child: GestureDetector(
+          onTap: _toggleDropdown,
+          child: Container(
+            padding: widget.padding,
+            decoration: widget.decoration ??
+                BoxDecoration(
+                  border: Border.all(color: Colors.grey.shade400),
+                  borderRadius: BorderRadius.circular(8),
+                  color: Colors.white,
+                ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: widget.isMultiSelect
+                      ? (_selectedLabels.isEmpty
+                      ? Text(
+                    widget.hintText ?? "Select items",
+                    style: widget.hintStyle ??
+                        const TextStyle(color: Colors.grey),
+                  )
+                      : _buildChips())
+                      : Text(
+                    _selectedLabel ?? (widget.hintText ?? "Select item"),
+                    style: _selectedLabel == null
+                        ? widget.hintStyle ??
+                        const TextStyle(color: Colors.grey)
+                        : widget.selectedTextStyle,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                widget.icon ?? const Icon(Icons.arrow_drop_down),
+              ],
+            ),
           ),
         ),
       ),
