@@ -347,6 +347,7 @@ class _AdvancedDropdownState extends State<AdvancedDropdown> {
     return PopScope(
       canPop: !_isDropdownOpen,
       onPopInvokedWithResult: (didPop, result) {
+        debugPrint('POP: didPop=$didPop, isOpen=$_isDropdownOpen, route=${ModalRoute.of(context)?.settings.name}');
         if (!didPop && _isDropdownOpen) {
           _closeDropdown();
         }

@@ -116,3 +116,9 @@
 ## 2.1.2
 
 - Fixed overlay issue
+
+---
+
+## 2.1.3
+
+- Fixed overlay issue
